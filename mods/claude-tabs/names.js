@@ -8,26 +8,35 @@
 //   default name ("Claude Code", from the + menu), or when its name is the one
 //   we set last time. Rename it yourself and it is left alone; clear the name
 //   (rename to "") to hand it back.
-// - The title is cleaned like the old hook: whitespace collapsed, Claude's
-//   status glyph (spinner/✳) stripped, cut at MAX characters.
+// - The title is cleaned like the old hook: whitespace collapsed and Claude's
+//   status glyph (spinner/✳) stripped. It is stored in full; the tab bar cuts
+//   it visually.
+// - Claude's placeholder titles are skipped: "Claude Code" and, until Claude
+//   picks a topic, the name of the folder it runs in.
+// - syncTabNames() runs on every render (Herdr re-renders on live data changes)
+//   and from a 5 s fallback timer in main.js; both are idempotent.
 
 import { spaces, panes, shared, setShared, run } from "herdr";
 
 const KEY = "claude-tabs.owned"; // tab id -> the name this mod gave it
-const MAX = 60;
 const DEFAULT_TITLES = new Set(["Claude Code", "Claude"]);
+const RETRY_MS = 5000;
 
-// Renames sent but not yet visible in spaces(); avoids re-sending on every render.
+// Renames sent but not yet visible in spaces(): tab id -> { name, at }. Avoids
+// re-sending on every render; expires so a rename that failed is retried.
 const inflight = new Map();
 
-export function cleanTitle(raw) {
+function folderName(cwd) {
+  return String(cwd ?? "").split(/[\\/]/).filter(Boolean).pop() ?? "";
+}
+
+export function cleanTitle(raw, cwd) {
   const t = String(raw ?? "")
     .replace(/\s+/g, " ")
     .replace(/^[^\p{L}\p{N}]+/u, "")
     .trim();
-  if (!t || DEFAULT_TITLES.has(t)) return "";
-  const chars = [...t];
-  return chars.length > MAX ? chars.slice(0, MAX).join("") + "…" : t;
+  if (!t || DEFAULT_TITLES.has(t) || t === folderName(cwd)) return "";
+  return t;
 }
 
 function claudePaneByTab() {
@@ -51,10 +60,11 @@ export function syncTabNames() {
     const mine = !tab.named || tab.name === owned[id] || tab.name === p.program?.name || DEFAULT_TITLES.has(tab.name);
     if (!mine) continue; // renamed by hand: leave it
     if (owned[id] !== undefined) next[id] = owned[id];
-    const title = cleanTitle(p.title);
+    const title = cleanTitle(p.title, p.cwd);
     if (!title || tab.name === title) { inflight.delete(id); continue; }
-    if (inflight.get(id) === title) continue;
-    inflight.set(id, title);
+    const sent = inflight.get(id);
+    if (sent && sent.name === title && Date.now() - sent.at < RETRY_MS) continue;
+    inflight.set(id, { name: title, at: Date.now() });
     run("tab.rename", { id, name: title });
     next[id] = title;
   }

@@ -4,7 +4,7 @@ Copyright 2026 Antonio Olmos
 mods/claude-tabs/main.js and mods/claude-tabs/*.svg are derived from the
 "tabs" mod (version 0.1.12) of Herdr (https://github.com/herdrdev/herdr-app),
 licensed under the Apache License, Version 2.0. Changes: the tab bar calls
-syncTabNames() from names.js on each render, asset paths point to
+syncTabNames() from names.js on each render and from a 5 s timer, asset paths point to
 mods/claude-tabs/, and tab labels are up to 260px wide.
 
 mods/claude-tabs/names.js is original to this project.

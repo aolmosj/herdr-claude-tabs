@@ -13,7 +13,9 @@ function find(node, id) {
 }
 
 export default class Tabs extends View {
-  init() {
+  init(_props, cx) {
+    // Fallback in case a title change doesn't trigger a render; cheap and idempotent.
+    cx.timer.every(5000, () => syncTabNames());
     this.pressed = null;
     this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}");
   }
