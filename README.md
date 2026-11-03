@@ -34,6 +34,16 @@ Notes:
 - **Don't symlink** `~/.config/herdr-app/mods/claude-tabs` to a clone of this repo: Herdr doesn't hot-reload through a symlink. Copy the folder (re-run the `cp` after `git pull`).
 - `herdr-app check` runs without live data, so it proves the mod loads, not that it renames anything. Try it with a Claude Code tab open.
 
+## Update
+
+```sh
+cd herdr-claude-tabs && git pull
+cp -r mods/claude-tabs ~/.config/herdr-app/mods/
+herdr-app check ~/.config/herdr-app/mods/claude-tabs
+```
+
+The installed version is `"version"` in `~/.config/herdr-app/mods/claude-tabs/mod.json`. Releases are tagged `vX.Y.Z`; see [CHANGELOG.md](CHANGELOG.md). To pin one, `git checkout vX.Y.Z` before copying.
+
 ## Uninstall
 
 Switch back to the `main` layout (Ctrl+Shift+L), then delete `~/.config/herdr-app/mods/claude-tabs` (and `layouts/my-main.json` if you made it for this).

@@ -1,6 +1,7 @@
 {
   "place": "none",
   "title": "Claude tabs",
+  "version": "0.2.0",
   "cloned_from": {
     "name": "tabs",
     "version": "0.1.12"
